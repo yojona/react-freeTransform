@@ -5,12 +5,8 @@ export default class Transform extends Component {
   constructor (props) {
     super(props)
     this.state = { x: 0, y: 0, width: 0, height: 0, angle: 0, originX: 0, originY: 0 }
-    this.onMouseMove = this.onMouseMove.bind(this)
-    this.onMouseDown = this.onMouseDown.bind(this)
-    this.onMouseUp = this.onMouseUp.bind(this)
-    this.onMouseLeave = this.onMouseLeave.bind(this)
     this.getComponent = this.getComponent.bind(this)
-    this.enabled = false
+    this.dragEnabled = false
     this.offsetX = 0
     this.offsetY = 0
   }
@@ -18,91 +14,75 @@ export default class Transform extends Component {
   componentDidMount () {
     this.setOrigin(0, 0)
     this.setPosition(0, 0)
-    this.setAngle(0)
+    this.setAngle(45)
     this.setSize(this.props.width, this.props.height)
+    document.addEventListener('mousemove', this.onMouseMove.bind(this), true)
+    document.addEventListener('mouseup', this.onMouseUp.bind(this), true)
   }
 
   getComponent() {
     return this.refs.component
   }
 
-  setOrigin (x, y) {
+  setOrigin (originX, originY) {
     let nstate = this.state
 
-    nstate.originX = x
-    nstate.originY = y
+    nstate.originX = originX
+    nstate.originY = originY
 
-    this.setState(nstate)
+    this.setState({originX, originY})
   }
 
   setPosition (x, y) {
-    let nstate = this.state
-
-    nstate.x = x 
-    nstate.y = y
-
-    this.setState(nstate)
-
+    this.setState({x, y})
     this.refs.wrapper.style.left = `${x - this.state.originX}px`
     this.refs.wrapper.style.top = `${y - this.state.originY}px`
   }
 
   setSize (width, height) {
-    let nstate = this.state
-    nstate.width = width
-    nstate.height = height
-    this.setState(nstate)
+    this.setState({width, height})
     this.getComponent().style.width = `${width}px`
     this.getComponent().style.height = `${height}px`
   }
 
   setAngle (angle) {
-    let nstate = this.state
-    nstate.angle = angle
-    nstate.angle = angle
-    this.setState(nstate)
+    this.setState({angle})
     this.getComponent().style.transform = `rotate(${angle}deg)`
     this.getComponent().style.transformOrigin = `${this.state.originX}px ${this.state.originY}px`
   }
 
   onMouseDown (e) {
-    this.enabled = true
-
     e.preventDefault();
     e.stopPropagation();
 
-    this.rect = this.refs.wrapper.getBoundingClientRect();
+    this.dragEnabled = true
+    let bounds = this.refs.wrapper.getBoundingClientRect();
 
-    this.offsetX = e.clientX - this.rect.left
-    this.offsetY = e.clientY - this.rect.top
+    this.offsetX = e.clientX - bounds.left
+    this.offsetY = e.clientY - bounds.top
   }
 
   onMouseUp () {
-    this.enabled = false
-  }
-
-  onMouseLeave () {
-    this.enabled = false
+    this.dragEnabled = false
   }
 
   onMouseMove (e) {
-    console.log(this.state)
+    if(this.dragEnabled) {
+      let nx = (e.clientX - this.refs.wrapper.offsetParent.offsetLeft) - (this.offsetX - this.state.originX)
+      let ny = (e.clientY - this.refs.wrapper.offsetParent.offsetTop) - (this.offsetY - this.state.originY)
+      this.setPosition(nx, ny)
 
-    e.preventDefault();
-    e.stopPropagation();
-
-    if(this.enabled) {
-      let x = (e.clientX - this.refs.wrapper.offsetParent.offsetLeft) - (this.offsetX - this.state.originX)
-      let y = (e.clientY - this.refs.wrapper.offsetParent.offsetTop) - (this.offsetY - this.state.originY)
-      this.setPosition(x, y)
+      // return dragging
+      const {x, y} = this.state
+      this.props.dragging(x, y)
     }
   }
 
   render () {
     return (
-      <div ref="wrapper" style={styles.component} onMouseLeave = {this.onMouseLeave} onMouseUp = {this.onMouseUp} onMouseDown = {this.onMouseDown} onMouseMove = {this.onMouseMove} >
-        <div ref="component" style={styles.component} onMouseLeave = {this.onMouseLeave} onMouseUp = {this.onMouseUp} onMouseDown = {this.onMouseDown} onMouseMove = {this.onMouseMove} >
-          {this.props.children}
+      <div ref="wrapper" style={styles.component} onMouseDown = {this.onMouseDown.bind(this)} >
+        <div ref="component" style={styles.component}  >
+        {this.props.children}
         </div>      
       </div>
     )
@@ -113,6 +93,5 @@ let styles = {
   component: {
     position: 'absolute',
     userSelect: 'none',
-    backgroundColor: 'green'
   }
 }

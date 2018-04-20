@@ -15,6 +15,13 @@ export default class Transform extends Component {
     this.offsetY = 0
   }
 
+  componentDidMount () {
+    this.setOrigin(0, 0)
+    this.setPosition(0, 0)
+    this.setAngle(0)
+    this.setSize(this.props.width, this.props.height)
+  }
+
   getComponent() {
     return this.refs.component
   }
@@ -22,8 +29,8 @@ export default class Transform extends Component {
   setOrigin (x, y) {
     let nstate = this.state
 
-    nstate.x = x
-    nstate.y = y
+    nstate.originX = x
+    nstate.originY = y
 
     this.setState(nstate)
   }
@@ -31,14 +38,13 @@ export default class Transform extends Component {
   setPosition (x, y) {
     let nstate = this.state
 
-    nstate.x = x
+    nstate.x = x 
     nstate.y = y
 
     this.setState(nstate)
 
-    this.refs.wrapper.style.left = `${x}px`
-    this.refs.wrapper.style.top = `${y}px`
-    this.getComponent().style.transformOrigin = `${this.state.originX}px ${this.state.originY}`
+    this.refs.wrapper.style.left = `${x - this.state.originX}px`
+    this.refs.wrapper.style.top = `${y - this.state.originY}px`
   }
 
   setSize (width, height) {
@@ -51,13 +57,12 @@ export default class Transform extends Component {
   }
 
   setAngle (angle) {
+    let nstate = this.state
+    nstate.angle = angle
+    nstate.angle = angle
+    this.setState(nstate)
     this.getComponent().style.transform = `rotate(${angle}deg)`
-    this.getComponent().style.transformOrigin = `${this.state.originX}px ${this.state.originY}`
-  }
-
-  componentDidMount () {
-    this.setPosition(45, 45)
-    this.setSize(this.props.width, this.props.height)
+    this.getComponent().style.transformOrigin = `${this.state.originX}px ${this.state.originY}px`
   }
 
   onMouseDown (e) {
@@ -81,13 +86,14 @@ export default class Transform extends Component {
   }
 
   onMouseMove (e) {
+    console.log(this.state)
 
     e.preventDefault();
     e.stopPropagation();
 
     if(this.enabled) {
-      let x = (e.clientX - this.refs.wrapper.offsetParent.offsetLeft) - this.offsetX
-      let y = (e.clientY - this.refs.wrapper.offsetParent.offsetTop) - this.offsetY
+      let x = (e.clientX - this.refs.wrapper.offsetParent.offsetLeft) - (this.offsetX - this.state.originX)
+      let y = (e.clientY - this.refs.wrapper.offsetParent.offsetTop) - (this.offsetY - this.state.originY)
       this.setPosition(x, y)
     }
   }

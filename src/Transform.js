@@ -16,6 +16,12 @@ export default class Transform extends Component {
     this.offsetX = 0
     this.offsetY = 0
     this.resizing = false
+    this.lastX = 0
+    this.lastY = 0
+    this.onTopEdge = false
+    this.onLeftEdge = false
+    this.onRightEdge = false
+    this.onBottomEdge = false
   }
 
   componentDidMount () {
@@ -59,20 +65,35 @@ export default class Transform extends Component {
   }
 
   onMouseDown (e) {
+    this.lastX = e.pageX || e.clientX + document.documentElement.scrollLeft
+    this.lastY = e.pageY || e.clientY + document.documentElement.scrollTop
+    
     this.dragEnabled = true
     let bounds = this.refs.wrapper.getBoundingClientRect();
 
     this.offsetX = e.clientX - bounds.left
     this.offsetY = e.clientY - bounds.top
+    let b = this.getComponent().getBoundingClientRect();
+    let x = e.clientX - b.left;
+    let y = e.clientY - b.top;
+    let MARGINS = 8
+    this.onTopEdge = y < MARGINS;
+    this.onLeftEdge = x < MARGINS;
+    this.onRightEdge = x >= b.width - MARGINS;
+    this.onBottomEdge = y >= b.height - MARGINS;
   }
 
   onMouseUp () {
     this.dragEnabled = false
     this.resizing = false
+    this.onTopEdge = false
+    this.onLeftEdge = false
+    this.onRightEdge = false
+    this.onBottomEdge = false
   }
 
   onMouseMove (e) {
-    // Drag
+    //Drag
     if(this.dragEnabled && !this.resizing) {
       let nx = (e.pageX - this.refs.wrapper.offsetParent.offsetLeft) - (this.offsetX - this.state.originX)
       let ny = (e.pageY - this.refs.wrapper.offsetParent.offsetTop) - (this.offsetY - this.state.originY)
@@ -85,8 +106,29 @@ export default class Transform extends Component {
       }
     }
 
-    // Resize
+    //Resize
     if (this.resizing) {
+      let b = this.getComponent().getBoundingClientRect();
+      let x = e.clientX - b.left;
+      let y = e.clientY - b.top;
+      let MARGINS = 8
+
+      let minWidth = 10
+      let minHeight = 10
+
+      if (this.onRightEdge) this.setSize(x, this.state.height)
+      if (this.onBottomEdge) this.setSize(this.state.width, y)
+      
+      if (this.onLeftEdge){
+        let dx = e.pageX - this.refs.wrapper.offsetParent.offsetLeft - this.state.x
+        this.setSize(parseInt(this.state.width) - dx, this.state.height)
+        this.setPosition(e.pageX - this.refs.wrapper.offsetParent.offsetLeft, this.state.y)
+      }
+      if (this.onTopEdge) {
+        let dy = e.pageY - this.refs.wrapper.offsetParent.offsetTop - this.state.y
+        this.setSize(this.state.width, parseInt(this.state.height) - dy)
+        this.setPosition(this.state.x, e.pageY - this.refs.wrapper.offsetParent.offsetTop)
+      }
       console.log('resizing')
     }
   }
@@ -98,7 +140,7 @@ export default class Transform extends Component {
 
   select () {
     this.setState({selected: true})
-    this.getComponent().style.outline = 'dashed 2px #ddd'
+    this.getComponent().style.outline = 'dashed 2px #98d4f4'
 
     Array.from(this.getComponent().childNodes).forEach(child => {
       if (child.className === 'handle') {

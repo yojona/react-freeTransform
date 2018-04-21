@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import Handle from './Handle'
 
 export default class Transform extends Component {
 
@@ -10,6 +11,7 @@ export default class Transform extends Component {
     this.onContextMenu = this.onContextMenu.bind(this)
     this.select = this.select.bind(this)
     this.unSelect = this.unSelect.bind(this)
+    this.onHandleDown = this.onHandleDown.bind(this)
     this.dragEnabled = false
     this.offsetX = 0
     this.offsetY = 0
@@ -66,19 +68,26 @@ export default class Transform extends Component {
 
   onMouseUp () {
     this.dragEnabled = false
+    this.resizing = false
   }
 
   onMouseMove (e) {
-    if(this.dragEnabled) {
+    // Drag
+    if(this.dragEnabled && !this.resizing) {
       let nx = (e.pageX - this.refs.wrapper.offsetParent.offsetLeft) - (this.offsetX - this.state.originX)
       let ny = (e.pageY - this.refs.wrapper.offsetParent.offsetTop) - (this.offsetY - this.state.originY)
       this.setPosition(nx, ny)
 
-      // return dragging
+      // Drag callback
       if(this.props.dragging) {
         const {x, y} = this.state
         this.props.dragging(x, y)       
       }
+    }
+
+    // Resize
+    if (this.resizing) {
+      console.log('resizing')
     }
   }
 
@@ -92,7 +101,7 @@ export default class Transform extends Component {
     this.getComponent().style.outline = 'dashed 2px #ddd'
 
     Array.from(this.getComponent().childNodes).forEach(child => {
-      if (child.className === 'handler') {
+      if (child.className === 'handle') {
         child.style.display = 'block'
       }
     })
@@ -104,25 +113,30 @@ export default class Transform extends Component {
     this.getComponent().style.outline = 0
 
     Array.from(this.getComponent().childNodes).forEach(child => {
-      if (child.className === 'handler') {
+      if (child.className === 'handle') {
         child.style.display = 'none'
       }
     })
+  }
+
+  onHandleDown () {
+    this.resizing = true
   }
 
   render () {
     return (
       <div ref="wrapper" style={styles.wrapper} onMouseDown = {this.onMouseDown} onContextMenu = {this.onContextMenu} >
         <div ref="component" style={styles.component} tabIndex="1" onFocus = {this.select} onBlur = {this.unSelect} >
-        <div className="handler" style={Object.assign({},styles.handle, styles.handleTopLeft)}></div>
-        <div className="handler" style={Object.assign({},styles.handle, styles.handleTopRight)}></div>
-        <div className="handler" style={Object.assign({},styles.handle, styles.handleBottomLeft)}></div>
-        <div className="handler" style={Object.assign({},styles.handle, styles.handleBottomRight)}></div>
-        <div className="handler" style={Object.assign({},styles.handle, styles.handleTop)}></div>
-        <div className="handler" style={Object.assign({},styles.handle, styles.handleRight)}></div>
-        <div className="handler" style={Object.assign({},styles.handle, styles.handleBottom)}></div>
-        <div className="handler" style={Object.assign({},styles.handle, styles.handleLeft)}></div>
-        {this.props.children}
+          <Handle onHandleDown = {this.onHandleDown} position="left" />
+          <Handle onHandleDown = {this.onHandleDown} position="top" />
+          <Handle onHandleDown = {this.onHandleDown} position="right" />
+          <Handle onHandleDown = {this.onHandleDown} position="bottom" />
+          <Handle onHandleDown = {this.onHandleDown} position="left" />
+          <Handle onHandleDown = {this.onHandleDown} position="topLeft" />
+          <Handle onHandleDown = {this.onHandleDown} position="topRight" />
+          <Handle onHandleDown = {this.onHandleDown} position="bottomLeft" />
+          <Handle onHandleDown = {this.onHandleDown} position="bottomRight" />
+          {this.props.children}
         </div>      
       </div>
     )
@@ -138,46 +152,5 @@ let styles = {
   wrapper: {
     position: 'absolute',
     userSelect: 'none',
-  },
-  handle: {
-    position: 'absolute',
-    width: 6,
-    height: 6,
-    backgroundColor: '#2196F3',
-    border: '1px solid white',
-    borderRadius: '50%',
-    display: 'none',
-  },
-  handleTopLeft: {
-    left: '-4px',
-    top: '-4px',
-  },
-  handleTopRight: {
-    right: '-4px',
-    top: '-4px',
-  },
-  handleBottomLeft: {
-    left: '-4px',
-    bottom: '-4px',
-  },
-  handleBottomRight: {
-    right: '-4px',
-    bottom: '-4px',
-  },  
-  handleTop: {
-    right: 'calc(50% - 5px)',
-    top: '-5px',
-  },
-  handleRight: {
-    right: '-5px',
-    bottom: 'calc(50% - 4px)'
-  },
-  handleBottom: {
-    right: 'calc(50% - 5px)',
-    bottom: '-5px',
-  },
-  handleLeft: {
-    left: '-5px',
-    bottom: 'calc(50% - 5px)',
   },
 }

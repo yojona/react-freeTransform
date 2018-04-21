@@ -14,7 +14,7 @@ export default class Transform extends Component {
   componentDidMount () {
     this.setOrigin(0, 0)
     this.setPosition(0, 0)
-    this.setAngle(45)
+    this.setAngle(0)
     this.setSize(this.props.width, this.props.height)
     document.addEventListener('mousemove', this.onMouseMove.bind(this), true)
     document.addEventListener('mouseup', this.onMouseUp.bind(this), true)
@@ -68,8 +68,8 @@ export default class Transform extends Component {
 
   onMouseMove (e) {
     if(this.dragEnabled) {
-      let nx = (e.clientX - this.refs.wrapper.offsetParent.offsetLeft) - (this.offsetX - this.state.originX)
-      let ny = (e.clientY - this.refs.wrapper.offsetParent.offsetTop) - (this.offsetY - this.state.originY)
+      let nx = (e.pageX - this.refs.wrapper.offsetParent.offsetLeft) - (this.offsetX - this.state.originX)
+      let ny = (e.pageY - this.refs.wrapper.offsetParent.offsetTop) - (this.offsetY - this.state.originY)
       this.setPosition(nx, ny)
 
       // return dragging
@@ -80,9 +80,9 @@ export default class Transform extends Component {
 
   render () {
     return (
-      <div ref="wrapper" style={styles.component} onMouseDown = {this.onMouseDown.bind(this)} >
+      <div ref="wrapper" style={styles.wrapper} onMouseDown = {this.onMouseDown.bind(this)} >
         <div ref="component" style={styles.component}  >
-        {this.props.children}
+          {this.props.children}
         </div>      
       </div>
     )
@@ -93,5 +93,12 @@ let styles = {
   component: {
     position: 'absolute',
     userSelect: 'none',
+    backgroundColor: 'green',
+  },
+  wrapper: {
+    position: 'absolute',
+    userSelect: 'none',
+    width: '100%',
+    height: '100%',
   }
 }

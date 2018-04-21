@@ -4,8 +4,11 @@ export default class Transform extends Component {
 
   constructor (props) {
     super(props)
-    this.state = { x: 0, y: 0, width: 0, height: 0, angle: 0, originX: 0, originY: 0 }
+    this.state = { x: 0, y: 0, width: 0, height: 0, angle: 0, originX: 0, originY: 0, selected: false }
     this.getComponent = this.getComponent.bind(this)
+    this.onMouseDown = this.onMouseDown.bind(this)
+    this.select = this.select.bind(this)
+    this.unSelect = this.unSelect.bind(this)
     this.dragEnabled = false
     this.offsetX = 0
     this.offsetY = 0
@@ -52,9 +55,6 @@ export default class Transform extends Component {
   }
 
   onMouseDown (e) {
-    e.preventDefault();
-    e.stopPropagation();
-
     this.dragEnabled = true
     let bounds = this.refs.wrapper.getBoundingClientRect();
 
@@ -73,15 +73,31 @@ export default class Transform extends Component {
       this.setPosition(nx, ny)
 
       // return dragging
-      const {x, y} = this.state
-      this.props.dragging(x, y)
+      if(this.props.dragging) {
+        const {x, y} = this.state
+        this.props.dragging(x, y)       
+      }
+
     }
+  }
+
+  select () {
+    console.log("select")
+    this.getComponent().style.outline = "2px dashed #bbb"
+
+  }
+
+  unSelect () {
+    console.log("unselect")
+    this.getComponent().style.outline = "0"
+
+
   }
 
   render () {
     return (
-      <div ref="wrapper" style={styles.wrapper} onMouseDown = {this.onMouseDown.bind(this)} >
-        <div ref="component" style={styles.component}  >
+      <div ref="wrapper" style={styles.wrapper} onMouseDown = {this.onMouseDown} >
+        <div ref="component" style={styles.component} tabIndex="1" onFocus = {this.select} onBlur = {this.unSelect} >
           {this.props.children}
         </div>      
       </div>
@@ -93,12 +109,10 @@ let styles = {
   component: {
     position: 'absolute',
     userSelect: 'none',
-    backgroundColor: 'green',
+    backgroundColor: 'red',
   },
   wrapper: {
     position: 'absolute',
     userSelect: 'none',
-    width: '100%',
-    height: '100%',
   }
 }

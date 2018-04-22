@@ -25,7 +25,7 @@ export default class Transform extends Component {
   }
 
   componentDidMount () {
-    this.setOrigin(0, 0)
+    this.setOrigin(32, 32)
     this.setPosition(0, 0)
     this.setAngle(0)
     this.setSize(this.props.width, this.props.height)
@@ -100,9 +100,9 @@ export default class Transform extends Component {
       this.setPosition(nx, ny)
 
       // Drag callback
-      if(this.props.dragging) {
+      if(this.props.onDrag) {
         const {x, y} = this.state
-        this.props.dragging(x, y)       
+        this.props.onDrag(x, y)       
       }
     }
 
@@ -120,16 +120,21 @@ export default class Transform extends Component {
       if (this.onBottomEdge) this.setSize(this.state.width, y)
       
       if (this.onLeftEdge){
-        let dx = e.pageX - this.refs.wrapper.offsetParent.offsetLeft - this.state.x
+
+        let dx = (e.pageX - this.refs.wrapper.offsetParent.offsetLeft - this.state.x) + this.state.originX        
         this.setSize(parseInt(this.state.width) - dx, this.state.height)
-        this.setPosition(e.pageX - this.refs.wrapper.offsetParent.offsetLeft, this.state.y)
+        this.setPosition(e.pageX - this.refs.wrapper.offsetParent.offsetLeft + this.state.originX, this.state.y)
       }
       if (this.onTopEdge) {
-        let dy = e.pageY - this.refs.wrapper.offsetParent.offsetTop - this.state.y
+        let dy = (e.pageY - this.refs.wrapper.offsetParent.offsetTop - this.state.y) + this.state.originY
         this.setSize(this.state.width, parseInt(this.state.height) - dy)
-        this.setPosition(this.state.x, e.pageY - this.refs.wrapper.offsetParent.offsetTop)
+        this.setPosition(this.state.x, e.pageY - this.refs.wrapper.offsetParent.offsetTop + this.state.originY)
       }
-      console.log('resizing')
+      // Resize callback
+      if(this.props.onResize) {
+        const {width, height} = this.state
+        this.props.onResize(width, height)       
+      }    
     }
   }
 
